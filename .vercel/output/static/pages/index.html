@@ -1,0 +1,558 @@
+<!doctype html>
+<!--
+  GitHub Pages: put this file in the repository as index.html (repo root, or /docs)
+  and turn Pages on. It reads the class spreadsheet in the browser and refreshes itself.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Seat plan</title>
+    <meta
+      name="description"
+      content="Live classroom seat plan arranged by recitation points. Exact counts stay hidden until the class password."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,640&family=Figtree:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper: #f3efe6;
+        --ink: #1c1915;
+        --muted: #6f675e;
+        --line: #d8d0c4;
+        --rose-fg: #4a1d1d;
+        --sand-fg: #4a3a0e;
+        --mint-fg: #16351c;
+        --ice-fg: #0e3c42;
+        --deep-fg: #1a2744;
+        --sans: "Figtree", "Avenir Next", "Segoe UI", sans-serif;
+        --display: "Fraunces", "Iowan Old Style", Palatino, serif;
+      }
+      * { box-sizing: border-box; }
+      button, [role="button"] { cursor: pointer; }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.45;
+      }
+      .page { max-width: 80rem; margin: 0 auto; padding: 1.5rem 1rem 2rem; }
+      .top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+      .eyebrow { margin: 0; color: var(--muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+      h1 { margin: 0.15rem 0 0; font-family: var(--display); font-size: clamp(1.75rem, 1.4rem + 1vw, 2.25rem); font-weight: 560; letter-spacing: -0.03em; line-height: 1.1; }
+      .status { margin: 0.5rem 0 0; color: var(--muted); font-size: 0.875rem; }
+      .tools { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+      .find, .btn { height: 2.75rem; border-radius: 8px; font: inherit; font-size: 0.875rem; font-weight: 650; }
+      .find { width: 14rem; max-width: 100%; border: 1px solid var(--line); background: #faf8f3; color: var(--ink); padding: 0 0.75rem; }
+      .find:focus-visible, .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0 1rem; border: 1px solid transparent; text-decoration: none; }
+      .btn-ink { background: var(--ink); color: var(--paper); }
+      .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+      .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .note { margin: 0 0 0.75rem; color: var(--rose-fg); background: #ffe3e3; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.875rem; }
+      .back-label, .front-label { color: var(--muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; margin: 0 0 0.5rem; }
+      .swipe { margin: 0 0 0.5rem; color: var(--muted); font-size: 0.75rem; }
+      .scroll { overflow-x: auto; padding-bottom: 0.5rem; }
+      .room {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(7.25rem, 1fr)) 1.25rem repeat(4, minmax(7.25rem, 1fr));
+        gap: 0.5rem;
+        min-width: 64rem;
+      }
+      .room.is-filtering .desk:not(.desk-hit) { opacity: 0.35; }
+      .desk {
+        min-height: 5.75rem;
+        border-radius: 8px;
+        padding: 0.5rem 0.5rem 0.4rem;
+        display: flex;
+        flex-direction: column;
+        border: 2px solid var(--ink);
+      }
+      .desk-empty { background: transparent; border-style: dashed; border-color: var(--line); }
+      .desk-eyesight { border-style: dashed; border-width: 2.5px; }
+      .desk-hit { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .desk-rose { background: #ffe3e3; color: var(--rose-fg); }
+      .desk-sand { background: #fff4c2; color: var(--sand-fg); }
+      .desk-mint { background: #dff6d4; color: var(--mint-fg); }
+      .desk-ice { background: #d7f7f4; color: var(--ice-fg); }
+      .desk-deep { background: #c5d4ef; color: var(--deep-fg); }
+      .desk-last { margin: 0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; line-height: 1.2; overflow-wrap: anywhere; }
+      .desk-given { margin: 0.15rem 0 0; font-size: 0.75rem; font-weight: 500; line-height: 1.25; overflow-wrap: anywhere; }
+      .desk-meta { margin-top: auto; display: flex; align-items: center; justify-content: space-between; padding-top: 0.5rem; min-height: 1.25rem; }
+      .desk-points { margin-left: auto; font-size: 0.875rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .eye { width: 14px; height: 14px; }
+      .teachers { margin: 1rem auto 0; max-width: 28rem; background: var(--ink); color: var(--paper); text-align: center; border-radius: 8px; padding: 1rem 1.5rem; font-family: var(--display); font-size: 1.25rem; }
+      .legend { display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; margin: 1.5rem 0 0; padding: 0; list-style: none; font-size: 0.875rem; }
+      .legend li { display: flex; align-items: center; gap: 0.5rem; }
+      .swatch { width: 1rem; height: 1rem; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent); flex: none; }
+      .swatch-eyesight { background: var(--paper); border: 2px dashed var(--ink); }
+      .how { margin-top: 1.5rem; border-top: 1px solid var(--line); padding-top: 1rem; max-width: 42rem; }
+      .how summary { font-weight: 700; cursor: pointer; }
+      .how li { color: var(--muted); font-size: 0.875rem; margin-top: 0.5rem; }
+      .unseated { margin-top: 1.5rem; }
+      .unseated h2 { font-size: 0.875rem; margin: 0; }
+      .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0 0; padding: 0; list-style: none; }
+      .chip { border: 1px solid var(--line); border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 0.875rem; background: #faf8f3; }
+      .miss, .empty-sheet { color: var(--muted); font-size: 0.875rem; }
+      .gate { width: min(26rem, calc(100vw - 2rem)); border: 2px solid var(--ink); border-radius: 16px; background: var(--paper); color: var(--ink); padding: 1.5rem; }
+      .gate::backdrop { background: color-mix(in srgb, var(--ink) 42%, transparent); }
+      .gate h2 { margin: 0.5rem 0 0; font-family: var(--display); font-size: 1.25rem; font-weight: 560; }
+      .gate p { color: var(--muted); font-size: 0.875rem; }
+      .gate-label { display: block; margin: 1rem 0 0.5rem; font-size: 0.875rem; font-weight: 700; color: var(--ink); }
+      .gate-input { width: 100%; }
+      .gate-error { color: var(--rose-fg); }
+      .gate-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+      @media (min-width: 64rem) { .swipe { display: none; } }
+      @media print {
+        .no-print { display: none !important; }
+        body { background: white; }
+        .page { max-width: none; padding: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="top">
+        <div>
+          <p class="eyebrow">Live from the class sheet</p>
+          <h1>Seat plan</h1>
+          <p class="status" id="status">Checking the recitation sheet</p>
+        </div>
+        <div class="tools no-print">
+          <input class="find" id="find" type="search" placeholder="Find a student" aria-label="Find a student" />
+          <button class="btn btn-ghost" id="refresh" type="button">Refresh</button>
+          <button class="btn btn-ghost" id="numbers" type="button">Show numbers</button>
+          <button class="btn btn-ghost" id="lock" type="button" hidden>Lock</button>
+          <button class="btn btn-ink" id="sheet" type="button">Open sheet</button>
+        </div>
+      </header>
+      <p class="note" id="note" hidden></p>
+      <p class="back-label">Back of the room</p>
+      <p class="swipe no-print">Swipe sideways to see every column.</p>
+      <div class="scroll">
+        <div class="room" id="room" aria-live="polite"></div>
+      </div>
+      <p class="miss" id="miss" hidden>No one by that name on the plan.</p>
+      <div class="teachers">Teacher’s Table</div>
+      <p class="front-label">Front of the room</p>
+      <ul class="legend" aria-label="Recitation colors">
+        <li><span class="swatch desk-rose"></span>Under 10</li>
+        <li><span class="swatch desk-sand"></span>Under 15</li>
+        <li><span class="swatch desk-mint"></span>Under 20</li>
+        <li><span class="swatch desk-ice"></span>Under 25</li>
+        <li><span class="swatch desk-deep"></span>25 and up</li>
+        <li><span class="swatch swatch-eyesight"></span>Eyesight seat</li>
+      </ul>
+      <section class="unseated" id="unseated" hidden>
+        <h2>No desk left</h2>
+        <ul class="chips" id="unseated-list"></ul>
+      </section>
+      <details class="how">
+        <summary>How seats are chosen</summary>
+        <ul>
+          <li>The six front desks are for eyesight difficulty. Fewest recitations sit farthest left.</li>
+          <li>Add an Eyesight column and mark Yes or No. Once anyone is marked, that column replaces the built-in six.</li>
+          <li>Everyone else zigzags from the bottom-left: left to right, then right to left, up to the back. Fewest recitations first. Ties break by last name. A leading de or de la is skipped.</li>
+          <li>Exact counts stay hidden until the class password. This page rechecks the spreadsheet on its own.</li>
+        </ul>
+      </details>
+    </main>
+    <dialog class="gate" id="gate">
+      <form id="gate-form">
+        <p class="eyebrow">Class password</p>
+        <h2 id="gate-title">Show recitation numbers</h2>
+        <p id="gate-copy">Names and colors stay visible. The exact counts need the class password.</p>
+        <label class="gate-label" for="class-password">Password</label>
+        <input class="find gate-input" id="class-password" type="password" autocomplete="current-password" />
+        <p class="gate-error" id="gate-error" hidden>That password isn’t right.</p>
+        <div class="gate-actions">
+          <button class="btn btn-ghost" id="gate-cancel" type="button">Cancel</button>
+          <button class="btn btn-ink" type="submit">Unlock</button>
+        </div>
+      </form>
+    </dialog>
+    <script>
+      const SHEET_ID = "1Tok7fSsvIQWPN0cSUatx0NEQAPfbxbOR1clv8S1q6l8";
+      const SHEET_EDIT_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/edit?gid=0#gid=0";
+      const PASS_HASH = "eafa8d7ce4f9a2fd94e491b48c7f83ad180466680cd0d44d016b9192ff4a5143";
+      const UNLOCK_KEY = "seat-plan-unlock";
+      const EYESIGHT = [
+        ["berdin", "mathew"],
+        ["soriano", "jaye"],
+        ["gumba", "malaika"],
+        ["llames", "cianna"],
+        ["de luna", "viktoria"],
+        ["yap", "chahna"],
+      ];
+      const ROWS = [
+        { cols: [0, 1, 2, 3, 4, 5, 6, 7], eyesight: [0, 1, 2, 3, 4, 5] },
+        { cols: [0, 1, 2, 3, 4, 5, 6, 7], eyesight: [] },
+        { cols: [0, 1, 2, 3, 4, 5, 6, 7], eyesight: [] },
+        { cols: [0, 1, 2, 3, 4, 5, 6, 7], eyesight: [] },
+        { cols: [2, 3, 4, 5, 6], eyesight: [] },
+      ];
+      const state = { plan: null, query: "", unlocked: false, showNumbers: false, intent: "numbers", loading: false };
+
+      function norm(value) {
+        return String(value || "").toLowerCase().replace(/\./g, "").replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+      }
+      function lastNameOf(full) {
+        const i = full.indexOf(",");
+        return (i === -1 ? full : full.slice(0, i)).trim();
+      }
+      function givenNameOf(full) {
+        const i = full.indexOf(",");
+        return (i === -1 ? "" : full.slice(i + 1)).trim();
+      }
+      function sortLastName(last) {
+        const particles = new Set(["de", "del", "dela", "la", "los", "las", "san", "santa", "sta", "sto"]);
+        const parts = last.split(/\s+/).filter(Boolean);
+        let index = 0;
+        while (index < parts.length - 1 && particles.has(parts[index].toLowerCase().replace(/\./g, ""))) index += 1;
+        return index > 0 ? parts.slice(index).join(" ") : last;
+      }
+      function isKnownEyesight(name) {
+        const last = norm(lastNameOf(name));
+        const given = norm(givenNameOf(name));
+        return EYESIGHT.some(([l, g]) => last === l && given.startsWith(g));
+      }
+      function bandFor(points) {
+        if (points < 10) return "rose";
+        if (points < 15) return "sand";
+        if (points < 20) return "mint";
+        if (points < 25) return "ice";
+        return "deep";
+      }
+      function compareStudents(a, b) {
+        if (a.points !== b.points) return a.points - b.points;
+        const byLast = sortLastName(a.lastName).localeCompare(sortLastName(b.lastName), "en", { sensitivity: "base" });
+        if (byLast !== 0) return byLast;
+        return a.name.localeCompare(b.name, "en", { sensitivity: "base" });
+      }
+      function arrange(students) {
+        const eyesightSorted = students.filter((s) => s.eyesight).slice().sort(compareStudents);
+        const front = eyesightSorted.slice(0, 6);
+        const eyesightOverflow = eyesightSorted.slice(6);
+        const regular = students.filter((s) => !front.includes(s)).slice().sort(compareStudents);
+        const byKey = new Map();
+        ROWS.forEach((row, rowFromFront) => {
+          const eyes = new Set(row.eyesight);
+          row.cols.forEach((col) => {
+            byKey.set(rowFromFront + ":" + col, {
+              rowFromFront, col, role: eyes.has(col) ? "eyesight" : "regular", student: null,
+            });
+          });
+        });
+        front.forEach((student, index) => {
+          const desk = byKey.get("0:" + index);
+          if (desk) desk.student = student;
+        });
+        const path = [];
+        ROWS.forEach((row, rowFromFront) => {
+          const eyes = new Set(row.eyesight);
+          const cols = rowFromFront % 2 === 0 ? row.cols : row.cols.slice().reverse();
+          cols.forEach((col) => {
+            if (!eyes.has(col)) path.push({ rowFromFront, col });
+          });
+        });
+        const unseated = [];
+        regular.forEach((student, index) => {
+          const slot = path[index];
+          if (!slot) { unseated.push(student); return; }
+          const desk = byKey.get(slot.rowFromFront + ":" + slot.col);
+          if (desk) desk.student = student;
+        });
+        return { desks: [...byKey.values()], unseated, eyesightOverflow, studentCount: students.length };
+      }
+      function studentsFromTable(table) {
+        const cols = table.cols || [];
+        const labels = cols.map((col) => norm(col.label || ""));
+        const findCol = (aliases) => labels.findIndex((label) => aliases.some((alias) => label === alias || label.includes(alias)));
+        let nameIdx = findCol(["name", "student"]);
+        let pointsIdx = findCol(["recitation", "point", "score", "number", "count"]);
+        let eyesightIdx = findCol(["eyesight", "eye sight", "vision"]);
+        if (nameIdx < 0) nameIdx = 0;
+        if (pointsIdx < 0) pointsIdx = 1;
+        const rows = table.rows || [];
+        const anyMarked = eyesightIdx >= 0 && rows.some((row) => marked(cell(row, eyesightIdx)));
+        const students = [];
+        rows.forEach((row) => {
+          const name = String(cell(row, nameIdx) || "").trim().replace(/\s+/g, " ");
+          if (!name || /^name$/i.test(name)) return;
+          const points = parsePoints(cell(row, pointsIdx));
+          const eyesight = anyMarked ? marked(cell(row, eyesightIdx)) : isKnownEyesight(name);
+          students.push({ name, lastName: lastNameOf(name), givenName: givenNameOf(name), points, eyesight });
+        });
+        return students;
+      }
+      function cell(row, index) {
+        const item = row && row.c && row.c[index];
+        if (!item) return "";
+        return item.v == null ? "" : item.v;
+      }
+      function parsePoints(raw) {
+        const cleaned = String(raw).trim().replace(/,/g, "");
+        if (!cleaned) return 0;
+        const value = Number(cleaned);
+        return Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
+      }
+      function marked(raw) {
+        const value = String(raw || "").trim().toLowerCase();
+        if (!value) return false;
+        return !["no", "n", "false", "0", "none", "-"].includes(value);
+      }
+      function loadSheet() {
+        if (state.loading) return;
+        state.loading = true;
+        const cb = "seatPlanCb" + Date.now();
+        const script = document.createElement("script");
+        let settled = false;
+        const timer = setTimeout(() => finish(new Error("The recitation sheet didn't respond.")), 12000);
+        function finish(error, table, sig) {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          state.loading = false;
+          try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+          script.remove();
+          if (error) {
+            showError(state.plan ? "Couldn't reach the sheet. The last plan is still showing." : error.message);
+            paintStatus();
+            return;
+          }
+          if (state.plan && sig && state.plan.sig === sig) {
+            state.plan.fetchedAt = new Date().toISOString();
+            paintStatus();
+            return;
+          }
+          const students = studentsFromTable(table);
+          state.plan = { ...arrange(students), fetchedAt: new Date().toISOString(), sig: sig || "" };
+          const note = document.getElementById("note");
+          note.hidden = true;
+          render();
+        }
+        window[cb] = (payload) => {
+          if (!payload || payload.status !== "ok" || !payload.table) {
+            finish(new Error("The sheet isn't public to the web. In Google Sheets, set sharing to anyone with the link can view."));
+            return;
+          }
+          finish(null, payload.table, payload.sig || "");
+        };
+        script.onerror = () => finish(new Error("Couldn't reach the recitation sheet."));
+        script.src = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?tqx=" +
+          encodeURIComponent("out:json;responseHandler:" + cb) + "&gid=0&headers=1&_=" + Date.now();
+        document.head.appendChild(script);
+      }
+      function showError(message) {
+        const note = document.getElementById("note");
+        note.hidden = false;
+        note.textContent = message;
+      }
+      function formatWhen(iso) {
+        return new Intl.DateTimeFormat("en-PH", {
+          timeZone: "Asia/Manila", month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+        }).format(new Date(iso));
+      }
+      function paintStatus() {
+        const status = document.getElementById("status");
+        if (!state.plan) {
+          status.textContent = "Waiting on the recitation sheet";
+          return;
+        }
+        status.textContent = state.plan.studentCount + " students · synced " + formatWhen(state.plan.fetchedAt) +
+          (state.loading ? " · checking" : "") + " · " + (state.showNumbers ? "numbers on" : "numbers hidden");
+      }
+      function eyeIcon() {
+        return '<svg class="eye" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+      }
+      function render() {
+        paintStatus();
+        const room = document.getElementById("room");
+        const needle = norm(document.getElementById("find").value);
+        room.classList.toggle("is-filtering", needle.length > 0);
+        const byKey = new Map();
+        if (state.plan) state.plan.desks.forEach((desk) => byKey.set(desk.rowFromFront + ":" + desk.col, desk));
+        const parts = [];
+        let hits = 0;
+        [4, 3, 2, 1, 0].forEach((row) => {
+          [0, 1, 2, 3].forEach((col) => parts.push(deskHtml(byKey.get(row + ":" + col), needle)));
+          parts.push('<div aria-hidden="true"></div>');
+          [4, 5, 6, 7].forEach((col) => parts.push(deskHtml(byKey.get(row + ":" + col), needle)));
+        });
+        room.innerHTML = parts.join("");
+        if (needle && state.plan) {
+          hits = state.plan.desks.filter((d) => d.student && norm(d.student.name).includes(needle)).length;
+        }
+        document.getElementById("miss").hidden = !(needle && hits === 0);
+        const box = document.getElementById("unseated");
+        const list = document.getElementById("unseated-list");
+        if (state.plan && state.plan.unseated.length) {
+          box.hidden = false;
+          list.innerHTML = state.plan.unseated.map((student) => {
+            const extra = state.showNumbers ? " · " + student.points : "";
+            return "<li class='chip'>" + escapeHtml(student.name + extra) + "</li>";
+          }).join("");
+        } else box.hidden = true;
+        document.getElementById("numbers").textContent = state.showNumbers ? "Hide numbers" : "Show numbers";
+        document.getElementById("lock").hidden = !state.unlocked;
+        const hit = room.querySelector("[data-hit='true']");
+        if (hit) hit.scrollIntoView({ block: "nearest", inline: "nearest" });
+      }
+      function deskHtml(desk, needle) {
+        if (!desk) return "<div aria-hidden='true'></div>";
+        const student = desk.student;
+        if (!student) return "<div class='desk desk-empty' aria-label='Empty desk'></div>";
+        const hit = needle && norm(student.name).includes(needle);
+        const eyesight = student.eyesight || desk.role === "eyesight";
+        const cls = ["desk", "desk-" + bandFor(student.points), eyesight ? "desk-eyesight" : "", hit ? "desk-hit" : ""].filter(Boolean).join(" ");
+        const given = student.givenName ? "<p class='desk-given'>" + escapeHtml(student.givenName) + "</p>" : "";
+        const points = state.showNumbers ? "<span class='desk-points'>" + student.points + "</span>" : "";
+        const icon = eyesight ? eyeIcon() : "<span></span>";
+        return "<article class='" + cls + "'" + (hit ? " data-hit='true'" : "") + ">" +
+          "<p class='desk-last'>" + escapeHtml(student.lastName) + "</p>" + given +
+          "<div class='desk-meta'>" + icon + points + "</div></article>";
+      }
+      function escapeHtml(value) {
+        const amp = String.fromCharCode(38);
+        return String(value)
+          .replaceAll(amp, amp + "amp;")
+          .replaceAll("<", amp + "lt;")
+          .replaceAll(">", amp + "gt;")
+          .replaceAll('"', amp + "quot;")
+          .replaceAll("'", amp + "#39;");
+      }
+      function sha256(ascii) {
+        function rightRotate(value, amount) {
+          return (value >>> amount) | (value << (32 - amount));
+        }
+        const maxWord = 2 ** 32;
+        let result = "";
+        const words = [];
+        const bitLength = ascii.length * 8;
+        const hash = [];
+        const k = [];
+        const composite = {};
+        for (let candidate = 2, primes = 0; primes < 64; candidate++) {
+          if (!composite[candidate]) {
+            for (let i = 0; i < 313; i += candidate) composite[i] = candidate;
+            hash[primes] = (Math.pow(candidate, 0.5) * maxWord) | 0;
+            k[primes++] = (Math.pow(candidate, 1 / 3) * maxWord) | 0;
+          }
+        }
+        let padded = ascii + "\x80";
+        while ((padded.length % 64) - 56) padded += "\x00";
+        for (let i = 0; i < padded.length; i++) {
+          words[i >> 2] |= padded.charCodeAt(i) << (((3 - i) % 4) * 8);
+        }
+        words[words.length] = (bitLength / maxWord) | 0;
+        words[words.length] = bitLength;
+        for (let j = 0; j < words.length; ) {
+          const w = words.slice(j, (j += 16));
+          const old = hash.slice(0);
+          for (let i = 0; i < 64; i++) {
+            const w15 = w[i - 15];
+            const w2 = w[i - 2];
+            const a = hash[0];
+            const e = hash[4];
+            const temp1 = (hash[7]
+              + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+              + ((e & hash[5]) ^ (~e & hash[6]))
+              + k[i]
+              + (w[i] = i < 16 ? w[i] : (w[i - 16]
+                + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                + w[i - 7]
+                + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))) | 0)) | 0;
+            const temp2 = ((rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+              + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]))) | 0;
+            hash.pop();
+            hash.unshift((temp1 + temp2) | 0);
+            hash[4] = (hash[4] + temp1) | 0;
+          }
+          for (let i = 0; i < 8; i++) hash[i] = (hash[i] + old[i]) | 0;
+        }
+        for (let i = 0; i < 8; i++) {
+          for (let shift = 3; shift + 1; shift--) {
+            const b = (hash[i] >> (shift * 8)) & 255;
+            result += (b < 16 ? "0" : "") + b.toString(16);
+          }
+        }
+        return result;
+      }
+      function passwordMatches(password) {
+        return sha256(password) === PASS_HASH;
+      }
+      function openSheet() {
+        const link = document.createElement("a");
+        link.href = SHEET_EDIT_URL;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+      function rememberUnlock() {
+        state.unlocked = true;
+        try { sessionStorage.setItem(UNLOCK_KEY, "1"); } catch (e) { /* ignore */ }
+      }
+      function openGate(intent) {
+        state.intent = intent;
+        document.getElementById("gate-title").textContent = intent === "sheet" ? "Open the sheet" : "Show recitation numbers";
+        document.getElementById("gate-copy").textContent = intent === "sheet"
+          ? "The spreadsheet stays locked until the class password is entered."
+          : "Names and colors stay visible. The exact counts need the class password.";
+        document.getElementById("gate-error").hidden = true;
+        const input = document.getElementById("class-password");
+        input.value = "";
+        document.getElementById("gate").showModal();
+        input.focus();
+      }
+      document.getElementById("find").addEventListener("input", (event) => {
+        state.query = event.target.value;
+        render();
+      });
+      document.getElementById("refresh").addEventListener("click", loadSheet);
+      document.getElementById("numbers").addEventListener("click", () => {
+        if (state.showNumbers) { state.showNumbers = false; render(); return; }
+        if (state.unlocked) { state.showNumbers = true; render(); return; }
+        openGate("numbers");
+      });
+      document.getElementById("lock").addEventListener("click", () => {
+        state.unlocked = false;
+        state.showNumbers = false;
+        try { sessionStorage.removeItem(UNLOCK_KEY); } catch (e) { /* ignore */ }
+        render();
+      });
+      document.getElementById("sheet").addEventListener("click", () => {
+        if (state.unlocked) { window.open(SHEET_EDIT_URL, "_blank", "noopener"); return; }
+        openGate("sheet");
+      });
+      document.getElementById("gate-cancel").addEventListener("click", () => document.getElementById("gate").close());
+      document.getElementById("gate-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const password = document.getElementById("class-password").value;
+        if (!passwordMatches(password)) {
+          document.getElementById("gate-error").hidden = false;
+          document.getElementById("class-password").focus();
+          return;
+        }
+        rememberUnlock();
+        document.getElementById("gate").close();
+        if (state.intent === "numbers") state.showNumbers = true;
+        if (state.intent === "sheet") openSheet();
+        render();
+      });
+      try { if (sessionStorage.getItem(UNLOCK_KEY) === "1") state.unlocked = true; } catch (e) { /* ignore */ }
+      render();
+      loadSheet();
+      setInterval(loadSheet, 20000);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") loadSheet();
+      });
+    </script>
+  </body>
+</html>

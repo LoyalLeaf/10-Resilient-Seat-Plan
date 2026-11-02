@@ -3,7 +3,7 @@ import { _ as createFileRoute, b as require_jsx_runtime, d as Scripts, f as Head
 import { n as TSS_SERVER_FUNCTION, r as getServerFnById, t as createServerFn } from "./ssr.mjs";
 import { t as TriangleAlert } from "../_libs/lucide-react.mjs";
 import { a as union, i as string, n as number, r as object, t as literal } from "../_libs/zod.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-snLOtGnv.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-CWleVHTq.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var __defProp = Object.defineProperty;
@@ -418,7 +418,7 @@ var createSsrRpc = (functionId) => {
 };
 var SHEET_EDIT_URL = `https://docs.google.com/spreadsheets/d/1Tok7fSsvIQWPN0cSUatx0NEQAPfbxbOR1clv8S1q6l8/edit?gid=0#gid=0`;
 var getSeatPlan = createServerFn({ method: "GET" }).validator((input) => ({ fresh: Boolean(input?.fresh) })).handler(createSsrRpc("6a54c8a0b159506ac092dc33a58b8ef13c899e24b1c94dbe265f15ff2d8ca719"));
-var $$splitComponentImporter = () => import("./routes-f8YQwF77.mjs");
+var $$splitComponentImporter = () => import("./routes-CQTIekX6.mjs");
 var Route = createFileRoute("/")({
 	loader: () => getSeatPlan({ data: { fresh: false } }),
 	component: lazyRouteComponent($$splitComponentImporter, "component")

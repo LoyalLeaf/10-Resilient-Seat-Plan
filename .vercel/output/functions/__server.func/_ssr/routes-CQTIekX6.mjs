@@ -1,9 +1,9 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { b as require_jsx_runtime, q as require_react } from "../_libs/@tanstack/react-router+[...].mjs";
 import { a as EyeOff, i as Eye, n as RefreshCw, o as ExternalLink, r as Lock } from "../_libs/lucide-react.mjs";
-import { i as getSeatPlan, n as Route, r as SHEET_EDIT_URL } from "./router-snLOtGnv.mjs";
+import { i as getSeatPlan, n as Route, r as SHEET_EDIT_URL } from "./router-CWleVHTq.mjs";
 import { r as bandFor, t as BANDS } from "./seat-plan-D-o9TAIQ.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-f8YQwF77.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-CQTIekX6.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var LEFT = [
@@ -150,19 +150,24 @@ function Home() {
 	}
 	async function submitPassword(event) {
 		event.preventDefault();
+		const intent = gate;
+		const sheetTab = intent === "sheet" ? window.open("", "_blank") : null;
 		setCheckingPassword(true);
 		try {
 			if (!await passwordMatches(password)) {
+				sheetTab?.close();
 				setGateError("That password isn’t right.");
 				return;
 			}
-			const intent = gate;
 			rememberUnlock();
 			setPassword("");
 			setGateError(null);
 			setGate(null);
 			if (intent === "numbers") setShowNumbers(true);
-			if (intent === "sheet") window.open(SHEET_EDIT_URL, "_blank", "noopener,noreferrer");
+			if (intent === "sheet" && sheetTab) {
+				sheetTab.opener = null;
+				sheetTab.location.href = SHEET_EDIT_URL;
+			}
 		} finally {
 			setCheckingPassword(false);
 		}

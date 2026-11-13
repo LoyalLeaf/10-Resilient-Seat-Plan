@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Figtree", "Avenir Next", "Segoe UI", sans-serif;
+  --font-display: "Fraunces", "Iowan Old Style", Palatino, serif;
+  --color-paper: #f3efe6;
+  --color-ink: #1c1915;
+  --color-muted: #6f675e;
+  --color-line: #d8d0c4;
+  --color-rose: #ffe3e3;
+  --color-rose-fg: #4a1d1d;
+  --color-sand: #fff4c2;
+  --color-sand-fg: #4a3a0e;
+  --color-mint: #dff6d4;
+  --color-mint-fg: #16351c;
+  --color-ice: #d7f7f4;
+  --color-ice-fg: #0e3c42;
+  --color-deep: #c5d4ef;
+  --color-deep-fg: #1a2744;
+  --color-lilac: #e8d9f5;
+  --color-lilac-fg: #3b1f4a;
+  --color-amber: #ffe8b8;
+  --color-amber-fg: #4a3208;
+  --color-teal: #c8f0ea;
+  --color-teal-fg: #0d3a36;
+  --color-indigo: #d4d0f5;
+  --color-indigo-fg: #1e1a4a;
+  --color-gold: #f5e6a8;
+  --color-gold-fg: #3d2e08;
+  --radius-desk: 8px;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  body {
+    margin: 0;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.45;
+  }
+}
+
+.room {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(7.25rem, 1fr)) 1.25rem repeat(4, minmax(7.25rem, 1fr));
+  gap: 0.5rem;
+  min-width: 64rem;
+}
+
+.desk {
+  min-height: 5.75rem;
+  border-radius: var(--radius-desk);
+  padding: 0.5rem 0.5rem 0.35rem;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--color-ink);
+}
+
+.desk-empty {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--color-line);
+}
+
+.desk-eyesight {
+  border-style: dashed;
+  border-width: 2.5px;
+}
+
+.desk-hit {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+.desk-rose { background: var(--color-rose); color: var(--color-rose-fg); }
+.desk-sand { background: var(--color-sand); color: var(--color-sand-fg); }
+.desk-mint { background: var(--color-mint); color: var(--color-mint-fg); }
+.desk-ice { background: var(--color-ice); color: var(--color-ice-fg); }
+.desk-deep { background: var(--color-deep); color: var(--color-deep-fg); }
+.desk-lilac { background: var(--color-lilac); color: var(--color-lilac-fg); }
+.desk-amber { background: var(--color-amber); color: var(--color-amber-fg); }
+.desk-teal { background: var(--color-teal); color: var(--color-teal-fg); }
+.desk-indigo { background: var(--color-indigo); color: var(--color-indigo-fg); }
+.desk-gold { background: var(--color-gold); color: var(--color-gold-fg); }
+
+.live-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-mint-fg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .live-dot {
+    animation: live-pulse 2.4s ease-out infinite;
+  }
+  @keyframes live-pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-mint-fg) 45%, transparent); }
+    100% { box-shadow: 0 0 0 8px transparent; }
+  }
+}

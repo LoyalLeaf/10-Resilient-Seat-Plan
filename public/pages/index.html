@@ -1,0 +1,671 @@
+<!doctype html>
+<!--
+  GitHub Pages: upload this file as index.html in the repository root (or /docs)
+  and turn Pages on. Recitation edits are saved to the shared class copy, not
+  this browser, so other open copies of the page pick them up.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Seat plan</title>
+    <meta name="theme-color" content="#f3efe6" />
+    <meta
+      name="description"
+      content="Classroom seat plan arranged by recitation points. Counts stay hidden until unlocked, and a saved count moves the seats for the whole class."
+    />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f3efe6'/%3E%3Crect x='5' y='6' width='9' height='7' rx='1.5' fill='%231c1915'/%3E%3Crect x='18' y='6' width='9' height='7' rx='1.5' fill='%231c1915'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,640&family=Figtree:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper: #f3efe6;
+        --ink: #1c1915;
+        --muted: #6f675e;
+        --line: #d8d0c4;
+        --rose: #ffe3e3;
+        --rose-fg: #4a1d1d;
+        --sand: #fff4c2;
+        --sand-fg: #4a3a0e;
+        --mint: #dff6d4;
+        --mint-fg: #16351c;
+        --ice: #d7f7f4;
+        --ice-fg: #0e3c42;
+        --deep: #c5d4ef;
+        --deep-fg: #1a2744;
+        --lilac: #e8d9f5;
+        --lilac-fg: #3b1f4a;
+        --amber: #ffe8b8;
+        --amber-fg: #4a3208;
+        --teal: #c8f0ea;
+        --teal-fg: #0d3a36;
+        --indigo: #d4d0f5;
+        --indigo-fg: #1e1a4a;
+        --gold: #f5e6a8;
+        --gold-fg: #3d2e08;
+        --sans: "Figtree", "Avenir Next", "Segoe UI", sans-serif;
+        --display: "Fraunces", "Iowan Old Style", Palatino, serif;
+      }
+      * { box-sizing: border-box; }
+      button, [role="button"] { cursor: pointer; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.45; }
+      .page { max-width: 80rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+      .top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+      .eyebrow { margin: 0; display: flex; align-items: center; gap: 0.5rem; color: var(--muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+      h1 { margin: 0.15rem 0 0; font-family: var(--display); font-size: clamp(1.75rem, 1.4rem + 1vw, 2.25rem); font-weight: 560; letter-spacing: -0.03em; line-height: 1.1; }
+      .status { margin: 0.5rem 0 0; max-width: 36rem; color: var(--muted); font-size: 0.875rem; }
+      .tools { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+      .find, .btn { height: 2.75rem; border-radius: 8px; font: inherit; font-size: 0.875rem; font-weight: 650; }
+      .find { width: 14rem; max-width: 100%; border: 1px solid var(--line); background: var(--paper); color: var(--ink); padding: 0 0.75rem; }
+      .find:focus-visible, .btn:focus-visible, .field:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0 1rem; border: 1px solid transparent; background: transparent; }
+      .btn-ink { background: var(--ink); color: var(--paper); }
+      .btn-ghost { border-color: var(--line); color: var(--ink); }
+      .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .note { margin: 0 0 0.75rem; color: var(--rose-fg); background: var(--rose); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.875rem; }
+      .label { color: var(--muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; margin: 0 0 0.5rem; }
+      .swipe { margin: 0 0 0.5rem; color: var(--muted); font-size: 0.75rem; }
+      .scroll { overflow-x: auto; padding-bottom: 0.5rem; }
+      .room { display: grid; grid-template-columns: repeat(4, minmax(7.25rem, 1fr)) 1.25rem repeat(4, minmax(7.25rem, 1fr)); gap: 0.5rem; min-width: 64rem; }
+      .room.is-filtering .desk:not(.desk-hit) { opacity: 0.4; }
+      .desk { min-height: 5.75rem; border-radius: 8px; padding: 0.5rem 0.5rem 0.35rem; display: flex; flex-direction: column; border: 2px solid var(--ink); }
+      .desk-empty { background: transparent; border-style: dashed; border-color: var(--line); }
+      .desk-eyesight { border-style: dashed; border-width: 2.5px; }
+      .desk-hit { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .desk p { margin: 0; }
+      .last { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.2; overflow-wrap: anywhere; }
+      .given { margin-top: 0.25rem; font-size: 0.75rem; line-height: 1.2; overflow-wrap: anywhere; }
+      .foot { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 0.25rem; padding-top: 0.5rem; }
+      .score { margin-bottom: 0.75rem; margin-left: auto; font-size: 0.875rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .icon-btn { width: 2.75rem; height: 2.75rem; border: 0; background: transparent; color: inherit; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; }
+      .table { max-width: 28rem; margin: 1rem auto 0; background: var(--ink); color: var(--paper); border-radius: 8px; padding: 1rem 1.5rem; text-align: center; font-family: var(--display); font-size: 1.25rem; }
+      .legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; list-style: none; padding: 0; margin: 1.5rem 0 0; font-size: 0.875rem; }
+      .swatch { width: 1rem; height: 1rem; border-radius: 999px; border: 1px solid rgba(28, 25, 21, 0.2); display: inline-block; }
+      .swatch-dash { border: 2px dashed var(--ink); background: var(--paper); }
+      .legend li { display: flex; align-items: center; gap: 0.5rem; }
+      .desk-rose { background: var(--rose); color: var(--rose-fg); }
+      .desk-sand { background: var(--sand); color: var(--sand-fg); }
+      .desk-mint { background: var(--mint); color: var(--mint-fg); }
+      .desk-ice { background: var(--ice); color: var(--ice-fg); }
+      .desk-deep { background: var(--deep); color: var(--deep-fg); }
+      .desk-lilac { background: var(--lilac); color: var(--lilac-fg); }
+      .desk-amber { background: var(--amber); color: var(--amber-fg); }
+      .desk-teal { background: var(--teal); color: var(--teal-fg); }
+      .desk-indigo { background: var(--indigo); color: var(--indigo-fg); }
+      .desk-gold { background: var(--gold); color: var(--gold-fg); }
+      details { margin-top: 1.5rem; max-width: 40rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+      summary { cursor: pointer; font-weight: 700; }
+      details li { margin: 0.5rem 0; color: var(--muted); font-size: 0.875rem; }
+      .shade { position: fixed; inset: 0; background: rgba(28, 25, 21, 0.4); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 20; }
+      .shade.sheet { align-items: flex-start; overflow: auto; }
+      .card { width: min(100%, 24rem); background: var(--paper); color: var(--ink); border: 2px solid var(--ink); border-radius: 16px; padding: 1.5rem; }
+      .card.wide { width: min(100%, 46rem); margin-top: 1.5rem; }
+      .card h2 { margin: 0.5rem 0 0; font-family: var(--display); font-size: 1.35rem; font-weight: 560; }
+      .card p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.875rem; }
+      .field { display: block; width: 100%; height: 2.75rem; margin-top: 0.5rem; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); padding: 0 0.75rem; font: inherit; }
+      .actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+      .error { color: var(--rose-fg); font-size: 0.875rem; margin: 0.5rem 0 0; }
+      table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem; margin-top: 1rem; }
+      th { text-align: left; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 0.5rem 0.75rem 0.5rem 0; border-bottom: 1px solid var(--line); }
+      td { padding: 0.5rem 0.75rem 0.5rem 0; border-bottom: 1px solid var(--line); }
+      .live { width: 0.5rem; height: 0.5rem; border-radius: 999px; background: var(--mint-fg); }
+      @media (max-width: 640px) { .swipe { display: block; } }
+      @media (min-width: 641px) { .swipe { display: none; } }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="top">
+        <div>
+          <p class="eyebrow"><span class="live" aria-hidden="true"></span> Shared class seat plan</p>
+          <h1>Seat plan</h1>
+          <p class="status" id="status">Loading the class sheet</p>
+        </div>
+        <div class="tools">
+          <input class="find" id="find" type="search" placeholder="Find a student" aria-label="Find a student" />
+          <button class="btn btn-ghost" id="refresh" type="button">Refresh</button>
+          <button class="btn btn-ghost" id="toggle-numbers" type="button">Show numbers</button>
+          <button class="btn btn-ghost" id="lock" type="button" hidden>Lock</button>
+          <button class="btn btn-ink" id="open-sheet" type="button">Class sheet</button>
+        </div>
+      </header>
+      <p class="note" id="notice" hidden></p>
+      <p class="label">Back of the room</p>
+      <p class="status" id="loading">Arranging the seats…</p>
+      <p class="swipe">Swipe sideways to see every column.</p>
+      <div class="scroll" id="scroll" hidden>
+        <div class="room" id="room"></div>
+      </div>
+      <p class="status" id="miss" hidden>No one by that name on the plan.</p>
+      <div class="table" id="teacher" hidden>Teacher’s table</div>
+      <p class="label" id="front-label" hidden>Front of the room</p>
+      <ul class="legend" id="legend"></ul>
+      <details>
+        <summary>How seats are chosen</summary>
+        <ul>
+          <li>Chahna Yap stays at the front-left eyesight seat, no matter her score. The other five eyesight seats rank left to right, fewest recitations first.</li>
+          <li>Everyone else zigzags from the front-left regular seats: left to right, then right to left, toward the back. Fewest first. The same score sorts by last name, skipping a leading de or de la.</li>
+          <li>Colors mark under 10, then 10, 15, 20, 25, 30, 35, 40, 45, and 50. Exact counts stay hidden until the class password.</li>
+          <li>The pencil asks for that student’s own last four LRN digits, then saves the new count for the whole class.</li>
+        </ul>
+      </details>
+    </main>
+
+    <div class="shade sheet" id="sheet-modal" hidden>
+      <section class="card wide" role="dialog" aria-labelledby="sheet-title">
+        <div class="top">
+          <div>
+            <p class="eyebrow">Class sheet</p>
+            <h2 id="sheet-title">Recitations</h2>
+            <p>Fewest recitations first. Same score, then last name.</p>
+          </div>
+          <button class="btn btn-ghost" id="close-sheet" type="button">Close</button>
+        </div>
+        <form id="sheet-form">
+          <label for="sheet-pin"><strong>Last 4 of LRN</strong></label>
+          <input class="field" id="sheet-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" style="max-width: 10rem" />
+          <div class="actions" style="justify-content: flex-start">
+            <button class="btn btn-ink" type="submit">Unlock counts</button>
+          </div>
+          <p class="error" id="sheet-error" hidden>That LRN does not match a student.</p>
+        </form>
+        <p class="status" id="sheet-open-note" hidden>Counts are unlocked for this visit.</p>
+        <div class="scroll"><table><thead><tr><th>Rank</th><th>Name</th><th>Recitations</th></tr></thead><tbody id="sheet-body"></tbody></table></div>
+      </section>
+    </div>
+
+    <div class="shade" id="pass-modal" hidden>
+      <form class="card" id="pass-form" role="dialog" aria-labelledby="pass-title">
+        <p class="eyebrow">Class password</p>
+        <h2 id="pass-title">Show recitation numbers</h2>
+        <p>Names and colors stay visible. The exact counts on the seat plan need the class password.</p>
+        <label for="class-password"><strong>Password</strong></label>
+        <input class="field" id="class-password" type="password" autocomplete="current-password" />
+        <p class="error" id="pass-error" hidden>That password isn’t right.</p>
+        <div class="actions">
+          <button class="btn btn-ghost" id="pass-cancel" type="button">Cancel</button>
+          <button class="btn btn-ink" type="submit">Unlock</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="shade" id="edit-modal" hidden>
+      <form class="card" id="edit-form" role="dialog" aria-labelledby="edit-title">
+        <p class="eyebrow">Student edit</p>
+        <h2 id="edit-title"></h2>
+        <p id="edit-copy"></p>
+        <div id="edit-step1">
+          <label for="edit-pin"><strong>Last 4 of LRN</strong></label>
+          <input class="field" id="edit-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" />
+        </div>
+        <div id="edit-step2" hidden>
+          <p id="edit-current" style="color: var(--ink)"></p>
+          <label for="edit-points"><strong>New recitation count</strong></label>
+          <input class="field" id="edit-points" type="number" min="0" max="999" step="1" />
+        </div>
+        <p class="error" id="edit-error" hidden></p>
+        <div class="actions">
+          <button class="btn btn-ghost" id="edit-cancel" type="button">Cancel</button>
+          <button class="btn btn-ink" id="edit-save" type="submit">Continue</button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      const SHEET_ID = "1Tok7fSsvIQWPN0cSUatx0NEQAPfbxbOR1clv8S1q6l8";
+      const BIN = "https://extendsclass.com/api/json-storage/bin/bbbcdde";
+      const PASS_HASH = "eafa8d7ce4f9a2fd94e491b48c7f83ad180466680cd0d44d016b9192ff4a5143";
+      const ROWS = [
+        { cols: [0, 1, 2, 3, 4, 5, 6, 7], eyesight: [0, 1, 2, 3, 4, 5] },
+        { cols: [0, 1, 2, 3, 4, 5, 6, 7], eyesight: [] },
+        { cols: [0, 1, 2, 3, 4, 5, 6, 7], eyesight: [] },
+        { cols: [0, 1, 2, 3, 4, 5, 6, 7], eyesight: [] },
+        { cols: [2, 3, 4, 5, 6], eyesight: [] },
+      ];
+      const EYESIGHT = [["berdin", "mathew"], ["soriano", "jaye"], ["gumba", "malaika"], ["llames", "cianna"], ["de luna", "viktoria"], ["yap", "chahna"]];
+      const BANDS = [["rose", "Under 10"], ["sand", "10+"], ["mint", "15+"], ["ice", "20+"], ["deep", "25+"], ["lilac", "30+"], ["amber", "35+"], ["teal", "40+"], ["indigo", "45+"], ["gold", "50"]];
+      const RAW = [
+        ["s01", "Arickx, Christoff R.", "0003"], ["s02", "Berdin, Mathew S.", "0062"], ["s03", "Datoon, Joshua Caleb D.", "0009"],
+        ["s04", "Olivan, Rein Christian S.", "0027"], ["s05", "Ortile, Jun Christian O.", "0012"], ["s06", "Patetico, Jesutivo Noah", "9147"],
+        ["s07", "Prellegera, John Stephen P.", "0054"], ["s08", "Tominio, Carlo V.", "0039"], ["s09", "Andrade, Ysabella Faye B.", "0012"],
+        ["s10", "Babasa, Ghislaine Br.", "0022"], ["s11", "Barameda, Summer VSN.", "0039"], ["s12", "Biag, Nigel Shane C.", "0072"],
+        ["s13", "Codia, Bielle Jonahs A.", "0191"], ["s14", "Colecha, Kim N.", "0079"], ["s15", "Dacillo, Luvly Jhamella C.", "0010"],
+        ["s16", "Dacuya, Althea Joy F.", "0037"], ["s17", "De la Fuente, Samiel Yara R.", "0138"], ["s18", "De Luna, Viktoria R.", "0009"],
+        ["s19", "Gumba, Malaika Ysabella C.", "0155"], ["s20", "Lista, Matilda Beatriz D.", "0026"], ["s21", "Llames, Cianna Margarette T.", "0039"],
+        ["s22", "Lumawon, Xyriel", "0108"], ["s23", "Mar, Janna Charlie O.", "0025"], ["s24", "Mengorio, Jelien Purz", "0033"],
+        ["s25", "Moises, Jinky Faye A.", "0130"], ["s26", "Morta, Amaia B.", "0043"], ["s27", "Opiana, Chriatia Fatima M.", "0007"],
+        ["s28", "Quiapon, Princess Corrine Y.", "0015"], ["s29", "Ramos, Jaira Nicole S.", "0045"], ["s30", "Robrigado, Xiarah Nicolette O.", "0250"],
+        ["s31", "Rojero, Samara Kate D.", "0052"], ["s32", "Saclag, Precious Jade R.", "0054"], ["s33", "Satuito, Jaira Airies C.", "0047"],
+        ["s34", "Soriano, Jaye Anne Nazareth R.", "0012"], ["s35", "Teodoro, Ella Jezrell E.", "0029"], ["s36", "Viray, Dennise Keith Y.", "0157"],
+        ["s37", "Yap, Chahna Mishael F.", "0141"],
+      ];
+      const PARTICLES = new Set(["de", "del", "dela", "la", "los", "las", "san", "santa", "sta", "sto"]);
+      const DIRECTORY = RAW.map(([id, name, pin]) => ({ id, name, pin, lastName: lastNameOf(name), givenName: givenNameOf(name) }));
+      const state = { rows: null, counts: {}, students: [], query: "", unlocked: false, showNumbers: false, sheetUnlocked: false, editing: null, editStep: 1, pin: "", fetchedAt: "", notice: "", sheetOk: false, sharedOk: false };
+
+      function norm(value) {
+        return String(value || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/\./g, "").replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+      }
+      function lastNameOf(full) { const i = full.indexOf(","); return (i === -1 ? full : full.slice(0, i)).trim(); }
+      function givenNameOf(full) { const i = full.indexOf(","); return (i === -1 ? "" : full.slice(i + 1)).trim(); }
+      function squash(value) { return value.replace(/(.)\1+/g, "$1"); }
+      function sortLastName(last) {
+        const parts = last.split(/\s+/).filter(Boolean);
+        let index = 0;
+        while (index < parts.length - 1 && PARTICLES.has(parts[index].toLowerCase().replace(/\./g, ""))) index += 1;
+        return index > 0 ? parts.slice(index).join(" ") : last;
+      }
+      function prettyName(raw) {
+        const parts = lastNameOf(raw).split(/\s+/).filter(Boolean);
+        const prettyLast = parts.map((part, index) => {
+          const token = part.replace(/\./g, "");
+          const lower = token.toLowerCase();
+          const particle = PARTICLES.has(lower);
+          if (particle && index !== parts.length - 1) return index === 0 && lower === "de" && parts.length > 2 ? "De" : lower;
+          return token ? token.charAt(0).toUpperCase() + token.slice(1).toLowerCase() : "";
+        }).filter(Boolean).join(" ");
+        const given = givenNameOf(raw).replace(/\s+/g, " ").trim();
+        return given ? prettyLast + ", " + given : prettyLast;
+      }
+      function eyesightName(name) {
+        const last = norm(lastNameOf(name));
+        const given = norm(givenNameOf(name));
+        return EYESIGHT.some(([l, g]) => last === l && given.startsWith(g));
+      }
+      function chahnaName(name) { return norm(lastNameOf(name)) === "yap" && norm(givenNameOf(name)).startsWith("chahna"); }
+      function bandFor(points) {
+        if (points < 10) return "rose";
+        if (points < 15) return "sand";
+        if (points < 20) return "mint";
+        if (points < 25) return "ice";
+        if (points < 30) return "deep";
+        if (points < 35) return "lilac";
+        if (points < 40) return "amber";
+        if (points < 45) return "teal";
+        if (points < 50) return "indigo";
+        return "gold";
+      }
+      function matchDirectory(raw) {
+        const last = norm(lastNameOf(raw));
+        const exact = DIRECTORY.filter((entry) => norm(entry.lastName) === last);
+        if (exact.length === 1) return exact[0];
+        const folded = DIRECTORY.filter((entry) => squash(norm(entry.lastName)) === squash(last));
+        return folded.length === 1 ? folded[0] : null;
+      }
+      function slugId(raw) {
+        const last = norm(lastNameOf(raw)).replace(/\s+/g, "-");
+        const given = norm(givenNameOf(raw)).split(" ").filter((part) => part.length > 1)[0] || "student";
+        return ("x-" + (last + "-" + given).replace(/[^a-z0-9-]/g, "")).slice(0, 50);
+      }
+      function compare(a, b) {
+        if (a.points !== b.points) return a.points - b.points;
+        const byLast = sortLastName(a.lastName).localeCompare(sortLastName(b.lastName), "en", { sensitivity: "base" });
+        return byLast || a.name.localeCompare(b.name, "en", { sensitivity: "base" });
+      }
+      function buildStudents() {
+        const counts = state.counts;
+        const source = state.rows || DIRECTORY.map((entry) => ({ name: entry.name, points: 0 }));
+        const seen = new Set();
+        const students = [];
+        source.forEach((row) => {
+          const raw = String(row.name || "").trim().replace(/\s+/g, " ");
+          if (!raw || /^name$/i.test(raw)) return;
+          const match = row.id ? DIRECTORY.find((entry) => entry.id === row.id) : matchDirectory(raw);
+          const id = match ? match.id : slugId(raw);
+          if (seen.has(id)) return;
+          seen.add(id);
+          const name = row.id ? match.name : prettyName(raw);
+          const hasOverride = Object.prototype.hasOwnProperty.call(counts, id);
+          students.push({
+            id, name, lastName: lastNameOf(name), givenName: givenNameOf(name),
+            points: hasOverride ? counts[id] : Number(row.points) || 0,
+            hasOverride, canEdit: Boolean(match),
+            eyesight: eyesightName(name) || id === "s37",
+          });
+        });
+        state.students = students;
+      }
+      function arrange(students) {
+        const chahna = students.find((student) => student.id === "s37" || chahnaName(student.name));
+        const others = students.filter((student) => student !== chahna);
+        const eyes = others.filter((student) => student.eyesight).slice().sort(compare);
+        const front = [];
+        if (chahna) front.push(Object.assign({}, chahna, { eyesight: true }));
+        front.push(...eyes.slice(0, 5));
+        const overflow = eyes.slice(5);
+        while (front.length < 6 && overflow.length) front.push(overflow.shift());
+        const placed = new Set(front);
+        const regular = others.filter((student) => !placed.has(student)).slice().sort(compare);
+        const byKey = new Map();
+        ROWS.forEach((row, rowFromFront) => {
+          const eyesCols = new Set(row.eyesight);
+          row.cols.forEach((col) => byKey.set(rowFromFront + ":" + col, { rowFromFront, col, role: eyesCols.has(col) ? "eyesight" : "regular", student: null }));
+        });
+        front.forEach((student, index) => { const desk = byKey.get("0:" + index); if (desk) desk.student = student; });
+        const path = [];
+        ROWS.forEach((row, rowFromFront) => {
+          const eyesCols = new Set(row.eyesight);
+          const cols = rowFromFront % 2 === 0 ? row.cols : row.cols.slice().reverse();
+          cols.forEach((col) => { if (!eyesCols.has(col)) path.push(rowFromFront + ":" + col); });
+        });
+        regular.forEach((student, index) => { const desk = byKey.get(path[index]); if (desk) desk.student = student; });
+        return byKey;
+      }
+      function parseShared(text) {
+        const cut = text.search(/<!doctype/i);
+        const json = (cut === -1 ? text : text.slice(0, cut)).trim();
+        const data = JSON.parse(json);
+        const points = {};
+        Object.entries(data.points || {}).forEach(([id, value]) => {
+          if (!/^(s\d{2}|x-[a-z0-9-]{1,60})$/.test(id)) return;
+          const n = Math.round(Number(value));
+          if (Number.isFinite(n)) points[id] = Math.min(999, Math.max(0, n));
+        });
+        return { rev: Math.max(0, Math.round(Number(data.rev) || 0)), points };
+      }
+      async function loadShared() {
+        const response = await fetch(BIN + "?t=" + Date.now(), { cache: "no-store" });
+        if (!response.ok) throw new Error("shared");
+        return parseShared(await response.text());
+      }
+      function loadSheet() {
+        return new Promise((resolve, reject) => {
+          const cb = "seatPlanCb" + Date.now();
+          const script = document.createElement("script");
+          let settled = false;
+          const timer = setTimeout(() => finish(new Error("sheet")), 12000);
+          function finish(error, table) {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            try { delete window[cb]; } catch (err) { window[cb] = undefined; }
+            script.remove();
+            if (error) reject(error); else resolve(table);
+          }
+          window[cb] = (payload) => {
+            if (!payload || payload.status !== "ok" || !payload.table) finish(new Error("sheet"));
+            else finish(null, payload.table);
+          };
+          script.onerror = () => finish(new Error("sheet"));
+          script.src = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?tqx=" + encodeURIComponent("out:json;responseHandler:" + cb) + "&gid=0&_=" + Date.now();
+          document.head.appendChild(script);
+        });
+      }
+      function rowsFromTable(table) {
+        const labels = (table.cols || []).map((col) => norm(col.label || ""));
+        let nameIdx = labels.findIndex((label) => label.includes("name"));
+        let pointsIdx = labels.findIndex((label) => ["number", "recitation", "point", "score", "count"].some((alias) => label.includes(alias)));
+        if (nameIdx < 0) nameIdx = 0;
+        if (pointsIdx < 0) pointsIdx = 1;
+        return (table.rows || []).map((row) => {
+          const name = String(row.c && row.c[nameIdx] && row.c[nameIdx].v || "").trim();
+          const raw = row.c && row.c[pointsIdx] ? row.c[pointsIdx].v : 0;
+          return { name, points: Math.max(0, Math.round(Number(String(raw).replace(/,/g, "")) || 0)) };
+        }).filter((row) => row.name);
+      }
+      async function sha256Hex(value) {
+        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+        return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+      function el(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = text;
+        return node;
+      }
+      function render() {
+        buildStudents();
+        const students = state.students;
+        const when = state.fetchedAt ? new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(state.fetchedAt)) : "";
+        document.getElementById("status").textContent = students.length
+          ? students.length + " students · updated " + when + " · " + (state.showNumbers ? "numbers on" : "numbers hidden")
+          : "Loading the class sheet";
+        const notice = document.getElementById("notice");
+        notice.hidden = !state.notice;
+        notice.textContent = state.notice;
+        document.getElementById("loading").hidden = students.length > 0;
+        document.getElementById("scroll").hidden = students.length === 0;
+        document.getElementById("teacher").hidden = students.length === 0;
+        document.getElementById("front-label").hidden = students.length === 0;
+        document.getElementById("lock").hidden = !state.unlocked;
+        document.getElementById("toggle-numbers").textContent = state.showNumbers ? "Hide numbers" : "Show numbers";
+        const room = document.getElementById("room");
+        room.classList.toggle("is-filtering", Boolean(state.query));
+        room.replaceChildren();
+        const byKey = students.length ? arrange(students) : new Map();
+        let hits = 0;
+        [4, 3, 2, 1, 0].forEach((row) => {
+          [0, 1, 2, 3].forEach((col) => room.append(deskNode(byKey.get(row + ":" + col))));
+          room.append(el("div"));
+          [4, 5, 6, 7].forEach((col) => room.append(deskNode(byKey.get(row + ":" + col))));
+        });
+        function deskNode(desk) {
+          if (!desk) return el("div");
+          if (!desk.student) return el("div", "desk desk-empty");
+          const student = desk.student;
+          const hit = state.query && norm(student.name).includes(state.query);
+          if (hit) hits += 1;
+          const eyes = student.eyesight || desk.role === "eyesight";
+          const card = el("article", "desk desk-" + bandFor(student.points) + (eyes ? " desk-eyesight" : "") + (hit ? " desk-hit" : ""));
+          card.append(el("p", "last", student.lastName));
+          if (student.givenName) card.append(el("p", "given", student.givenName));
+          const foot = el("div", "foot");
+          if (eyes) foot.append(el("span", "", "◦"));
+          if (state.showNumbers) foot.append(el("span", "score", String(student.points) + (student.hasOverride ? "*" : "")));
+          else foot.append(el("span", "score", ""));
+          const button = el("button", "icon-btn");
+          button.type = "button";
+          button.setAttribute("aria-label", "Edit recitations for " + student.name);
+          button.append(el("span", "", "✎"));
+          button.addEventListener("click", () => openEdit(student));
+          foot.append(button);
+          card.append(foot);
+          return card;
+        }
+        document.getElementById("miss").hidden = !state.query || hits > 0;
+        const body = document.getElementById("sheet-body");
+        body.replaceChildren();
+        students.slice().sort(compare).forEach((student, index) => {
+          const tr = document.createElement("tr");
+          tr.append(el("td", "", String(index + 1)));
+          tr.append(el("td", "", student.name));
+          tr.append(el("td", "", state.sheetUnlocked ? String(student.points) + (student.hasOverride ? "*" : "") : "—"));
+          body.append(tr);
+        });
+      }
+      function openEdit(student) {
+        state.editing = student;
+        state.editStep = 1;
+        state.pin = "";
+        document.getElementById("edit-title").textContent = student.name;
+        document.getElementById("edit-copy").textContent = student.canEdit
+          ? "Enter the last four digits of this student’s LRN. The current count stays hidden until that matches."
+          : "No LRN is on file for this student.";
+        document.getElementById("edit-step1").hidden = false;
+        document.getElementById("edit-step2").hidden = true;
+        document.getElementById("edit-pin").value = "";
+        document.getElementById("edit-pin").disabled = !student.canEdit;
+        document.getElementById("edit-error").hidden = student.canEdit;
+        document.getElementById("edit-error").textContent = student.canEdit ? "" : "No LRN is on file for this student.";
+        document.getElementById("edit-save").textContent = "Continue";
+        document.getElementById("edit-save").disabled = !student.canEdit;
+        document.getElementById("edit-modal").hidden = false;
+        if (student.canEdit) document.getElementById("edit-pin").focus();
+      }
+      async function refreshShared() {
+        try {
+          const doc = await loadShared();
+          state.counts = doc.points;
+          state.sharedOk = true;
+        } catch (error) {
+          state.sharedOk = false;
+        }
+        state.fetchedAt = new Date().toISOString();
+        const notes = [];
+        if (!state.sheetOk) notes.push("The class sheet didn’t load. Showing the saved roster.");
+        if (!state.sharedOk) notes.push("The shared copy didn’t answer. This page will keep trying.");
+        state.notice = notes.join(" ");
+        render();
+      }
+      async function refreshSheet() {
+        try {
+          state.rows = rowsFromTable(await loadSheet());
+          state.sheetOk = true;
+        } catch (error) {
+          state.sheetOk = Boolean(state.rows);
+        }
+        await refreshShared();
+      }
+      async function saveCount(student, pin, points) {
+        const match = DIRECTORY.find((entry) => entry.id === student.id);
+        if (!match || match.pin !== pin) return { ok: false, message: "That LRN does not match. Try again." };
+        const next = Math.max(0, Math.min(999, Math.round(Number(points) || 0)));
+        for (let attempt = 0; attempt < 4; attempt += 1) {
+          const current = await loadShared();
+          const merged = Object.assign({}, current.points, { [student.id]: next });
+          const rev = current.rev + 1;
+          const response = await fetch(BIN, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ rev, points: merged }),
+          });
+          if (!response.ok) continue;
+          const check = await loadShared();
+          if (check.points[student.id] === next) {
+            state.counts = check.points;
+            state.sharedOk = true;
+            return { ok: true };
+          }
+        }
+        return { ok: false, message: "Couldn’t save for the class. Try again." };
+      }
+
+      document.getElementById("legend").append(...BANDS.map(([id, label]) => {
+        const item = el("li");
+        const swatch = el("span", "swatch desk-" + id);
+        item.append(swatch, document.createTextNode(label));
+        return item;
+      }), (() => {
+        const item = el("li");
+        item.append(el("span", "swatch swatch-dash"), document.createTextNode("Eyesight seat"));
+        return item;
+      })());
+
+      try {
+        if (sessionStorage.getItem("seat-plan-unlock") === "1") state.unlocked = true;
+        if (sessionStorage.getItem("seat-plan-sheet-lrn") === "1") state.sheetUnlocked = true;
+      } catch (error) { /* ignore */ }
+
+      document.getElementById("find").addEventListener("input", (event) => { state.query = norm(event.target.value); render(); });
+      document.getElementById("refresh").addEventListener("click", () => { void refreshSheet(); });
+      document.getElementById("toggle-numbers").addEventListener("click", () => {
+        if (state.showNumbers) { state.showNumbers = false; render(); return; }
+        if (state.unlocked) { state.showNumbers = true; render(); return; }
+        document.getElementById("pass-error").hidden = true;
+        document.getElementById("class-password").value = "";
+        document.getElementById("pass-modal").hidden = false;
+        document.getElementById("class-password").focus();
+      });
+      document.getElementById("lock").addEventListener("click", () => {
+        state.unlocked = false;
+        state.showNumbers = false;
+        try { sessionStorage.removeItem("seat-plan-unlock"); } catch (error) { /* ignore */ }
+        render();
+      });
+      document.getElementById("open-sheet").addEventListener("click", () => {
+        document.getElementById("sheet-form").hidden = state.sheetUnlocked;
+        document.getElementById("sheet-open-note").hidden = !state.sheetUnlocked;
+        document.getElementById("sheet-error").hidden = true;
+        document.getElementById("sheet-modal").hidden = false;
+      });
+      document.getElementById("close-sheet").addEventListener("click", () => { document.getElementById("sheet-modal").hidden = true; });
+      document.getElementById("pass-cancel").addEventListener("click", () => { document.getElementById("pass-modal").hidden = true; });
+      document.getElementById("edit-cancel").addEventListener("click", () => { document.getElementById("edit-modal").hidden = true; });
+      document.getElementById("pass-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const hash = await sha256Hex(document.getElementById("class-password").value);
+        if (hash !== PASS_HASH) { document.getElementById("pass-error").hidden = false; return; }
+        state.unlocked = true;
+        state.showNumbers = true;
+        try { sessionStorage.setItem("seat-plan-unlock", "1"); } catch (error) { /* ignore */ }
+        document.getElementById("pass-modal").hidden = true;
+        render();
+      });
+      document.getElementById("sheet-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const pin = document.getElementById("sheet-pin").value.trim();
+        if (!DIRECTORY.some((entry) => entry.pin === pin)) {
+          document.getElementById("sheet-error").hidden = false;
+          return;
+        }
+        state.sheetUnlocked = true;
+        try { sessionStorage.setItem("seat-plan-sheet-lrn", "1"); } catch (error) { /* ignore */ }
+        document.getElementById("sheet-form").hidden = true;
+        document.getElementById("sheet-open-note").hidden = false;
+        document.getElementById("sheet-error").hidden = true;
+        render();
+      });
+      document.getElementById("edit-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const student = state.editing;
+        if (!student || !student.canEdit) return;
+        const button = document.getElementById("edit-save");
+        if (state.editStep === 1) {
+          const pin = document.getElementById("edit-pin").value.trim();
+          const match = DIRECTORY.find((entry) => entry.id === student.id);
+          if (!match || match.pin !== pin) {
+            document.getElementById("edit-pin").value = "";
+            document.getElementById("edit-error").hidden = false;
+            document.getElementById("edit-error").textContent = "That LRN does not match. Try again.";
+            return;
+          }
+          state.pin = pin;
+          state.editStep = 2;
+          document.getElementById("edit-step1").hidden = true;
+          document.getElementById("edit-step2").hidden = false;
+          document.getElementById("edit-current").textContent = "Current recitations: " + student.points;
+          document.getElementById("edit-points").value = String(student.points);
+          document.getElementById("edit-error").hidden = true;
+          button.textContent = "Save";
+          document.getElementById("edit-points").focus();
+          return;
+        }
+        button.disabled = true;
+        button.textContent = "Saving";
+        try {
+          const result = await saveCount(student, state.pin, document.getElementById("edit-points").value);
+          if (!result.ok) {
+            state.editStep = 1;
+            state.pin = "";
+            document.getElementById("edit-step1").hidden = false;
+            document.getElementById("edit-step2").hidden = true;
+            document.getElementById("edit-pin").value = "";
+            document.getElementById("edit-error").hidden = false;
+            document.getElementById("edit-error").textContent = result.message;
+            button.textContent = "Continue";
+            return;
+          }
+          document.getElementById("edit-modal").hidden = true;
+          state.fetchedAt = new Date().toISOString();
+          state.notice = "";
+          render();
+        } catch (error) {
+          document.getElementById("edit-error").hidden = false;
+          document.getElementById("edit-error").textContent = "Couldn’t save for the class. Try again.";
+        } finally {
+          button.disabled = false;
+          if (state.editStep === 2) button.textContent = "Save";
+        }
+      });
+
+      void refreshSheet();
+      setInterval(() => { if (document.visibilityState === "visible") void refreshShared(); }, 12000);
+      document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") void refreshSheet(); });
+    </script>
+  </body>
+</html>

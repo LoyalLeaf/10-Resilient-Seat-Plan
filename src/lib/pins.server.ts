@@ -1,0 +1,45 @@
+import "@tanstack/react-start/server-only";
+
+/** Last 4 digits of each LRN, keyed by stable student id. Never send this map to the browser. */
+export const PINS: Record<string, string> = {
+  s01: "0003",
+  s02: "0062",
+  s03: "0009",
+  s04: "0027",
+  s05: "0012",
+  s06: "9147",
+  s07: "0054",
+  s08: "0039",
+  s09: "0012",
+  s10: "0022",
+  s11: "0039",
+  s12: "0072",
+  s13: "0191",
+  s14: "0079",
+  s15: "0010",
+  s16: "0037",
+  s17: "0138",
+  s18: "0009",
+  s19: "0155",
+  s20: "0026",
+  s21: "0039",
+  s22: "0108",
+  s23: "0025",
+  s24: "0033",
+  s25: "0130",
+  s26: "0043",
+  s27: "0007",
+  s28: "0015",
+  s29: "0045",
+  s30: "0250",
+  s31: "0052",
+  s32: "0054",
+  s33: "0047",
+  s34: "0012",
+  s35: "0029",
+  s36: "0157",
+  s37: "0141",
+};
+
+export const CLASS_PASS_HASH =
+  "eafa8d7ce4f9a2fd94e491b48c7f83ad180466680cd0d44d016b9192ff4a5143";

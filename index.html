@@ -167,13 +167,22 @@
           <button class="btn btn-ghost" id="close-sheet" type="button">Close</button>
         </div>
         <form id="sheet-form">
-          <label for="sheet-pin"><strong>Last 4 of LRN</strong></label>
-          <input class="field" id="sheet-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" style="max-width: 10rem" />
-          <div class="actions" style="justify-content: flex-start">
-            <button class="btn btn-ink" type="submit">Unlock counts</button>
-          </div>
-          <p class="error" id="sheet-error" hidden>That LRN does not match a student.</p>
-        </form>
+          <label for="sheet-password"><strong>Class password</strong></label>
+          <input
+            class="field"
+            id="sheet-password"
+            type="password"
+            autocomplete="current-password"
+            style="max-width: 14rem"
+            required
+            />
+        <div class="actions" style="justify-content: flex-start">
+          <button class="btn btn-ink" type="submit">Unlock class sheet</button>
+        </div>
+        <p class="error" id="sheet-error" hidden>
+          Incorrect class password. Try again.
+        </p>
+      </form>
         <p class="status" id="sheet-open-note" hidden>Counts are unlocked for this visit.</p>
         <div class="scroll"><table><thead><tr><th>Rank</th><th>Name</th><th>Recitations</th></tr></thead><tbody id="sheet-body"></tbody></table></div>
       </section>

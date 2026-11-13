@@ -605,19 +605,31 @@
         document.getElementById("pass-modal").hidden = true;
         render();
       });
-      document.getElementById("sheet-form").addEventListener("submit", (event) => {
-        event.preventDefault();
-        const pin = document.getElementById("sheet-pin").value.trim();
-        if (!DIRECTORY.some((entry) => entry.pin === pin)) {
-          document.getElementById("sheet-error").hidden = false;
-          return;
-        }
-        state.sheetUnlocked = true;
-        try { sessionStorage.setItem("seat-plan-sheet-lrn", "1"); } catch (error) { /* ignore */ }
-        document.getElementById("sheet-form").hidden = true;
-        document.getElementById("sheet-open-note").hidden = false;
-        document.getElementById("sheet-error").hidden = true;
-        render();
+      document.getElementById("sheet-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const password = document.getElementById("sheet-password").value;
+      const hash = await sha256Hex(password);
+
+      if (hash !== PASS_HASH) {
+        document.getElementById("sheet-error").hidden = false;
+        return;
+      }
+
+      state.sheetUnlocked = true;
+
+       try {
+         sessionStorage.setItem("seat-plan-sheet-lrn", "1");
+      } catch (error) {
+        /* ignore */
+      }
+
+      document.getElementById("sheet-form").hidden = true;
+      document.getElementById("sheet-open-note").hidden = false;
+      document.getElementById("sheet-error").hidden = true;
+    
+      render();
+    });
       });
       document.getElementById("edit-form").addEventListener("submit", async (event) => {
         event.preventDefault();

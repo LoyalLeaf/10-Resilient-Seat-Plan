@@ -166,26 +166,23 @@
           </div>
           <button class="btn btn-ghost" id="close-sheet" type="button">Close</button>
         </div>
-        <form id="sheet-form">
-          <label for="sheet-password"><strong>Class password</strong></label>
-          <input
-            class="field"
-            id="sheet-password"
-            type="password"
-            autocomplete="current-password"
-            style="max-width: 14rem"
-            required
-            />
-        <div class="actions" style="justify-content: flex-start">
-          <button class="btn btn-ink" type="submit">Unlock class sheet</button>
-        </div>
-        <p class="error" id="sheet-error" hidden>
-          Incorrect class password. Try again.
-        </p>
-      </form>
-        <p class="status" id="sheet-open-note" hidden>Counts are unlocked for this visit.</p>
         <div class="scroll"><table><thead><tr><th>Rank</th><th>Name</th><th>Recitations</th></tr></thead><tbody id="sheet-body"></tbody></table></div>
       </section>
+    </div>
+
+    <div class="shade" id="sheet-pass-modal" hidden>
+      <form class="card" id="sheet-pass-form" role="dialog" aria-labelledby="sheet-pass-title">
+        <p class="eyebrow">Class sheet access</p>
+        <h2 id="sheet-pass-title">Enter class password</h2>
+        <p>The class sheet can only be opened with the class password.</p>
+        <label for="sheet-password"><strong>Password</strong></label>
+        <input class="field" id="sheet-password" type="password" autocomplete="current-password" required />
+        <p class="error" id="sheet-error" hidden>Incorrect class password. Try again.</p>
+        <div class="actions">
+          <button class="btn btn-ghost" id="sheet-pass-cancel" type="button">Cancel</button>
+          <button class="btn btn-ink" type="submit">Unlock class sheet</button>
+        </div>
+      </form>
     </div>
 
     <div class="shade" id="pass-modal" hidden>
@@ -228,7 +225,14 @@
     <script>
       const SHEET_ID = "1Tok7fSsvIQWPN0cSUatx0NEQAPfbxbOR1clv8S1q6l8";
       const BIN = "https://extendsclass.com/api/json-storage/bin/bbbcdde";
+
+      // Used by the separate "Show numbers" feature.
       const PASS_HASH = "eafa8d7ce4f9a2fd94e491b48c7f83ad180466680cd0d44d016b9192ff4a5143";
+
+      // The Class sheet uses the same password: 10resilient*.
+      // This is stored as SHA-256 rather than as plain text.
+      const SHEET_PASS_HASH = "eafa8d7ce4f9a2fd94e491b48c7f83ad180466680cd0d44d016b9192ff4a5143";
+
       const ROWS = [
         { cols: [0, 1, 2, 3, 4, 5, 6, 7], eyesight: [0, 1, 2, 3, 4, 5] },
         { cols: [0, 1, 2, 3, 4, 5, 6, 7], eyesight: [] },
@@ -567,126 +571,224 @@
 
       try {
         if (sessionStorage.getItem("seat-plan-unlock") === "1") state.unlocked = true;
-        if (sessionStorage.getItem("seat-plan-sheet-lrn") === "1") state.sheetUnlocked = true;
+
+        // The Class sheet is intentionally never remembered between openings.
+        // Clear keys from earlier versions that may have kept it unlocked.
+        sessionStorage.removeItem("seat-plan-sheet-lrn");
+        sessionStorage.removeItem("seat-plan-sheet-password-v2");
       } catch (error) { /* ignore */ }
 
-      document.getElementById("find").addEventListener("input", (event) => { state.query = norm(event.target.value); render(); });
-      document.getElementById("refresh").addEventListener("click", () => { void refreshSheet(); });
+      document.getElementById("find").addEventListener("input", (event) => {
+        state.query = norm(event.target.value);
+        render();
+      });
+
+      document.getElementById("refresh").addEventListener("click", () => {
+        void refreshSheet();
+      });
+
       document.getElementById("toggle-numbers").addEventListener("click", () => {
-        if (state.showNumbers) { state.showNumbers = false; render(); return; }
-        if (state.unlocked) { state.showNumbers = true; render(); return; }
+        if (state.showNumbers) {
+          state.showNumbers = false;
+          render();
+          return;
+        }
+
+        if (state.unlocked) {
+          state.showNumbers = true;
+          render();
+          return;
+        }
+
         document.getElementById("pass-error").hidden = true;
         document.getElementById("class-password").value = "";
         document.getElementById("pass-modal").hidden = false;
         document.getElementById("class-password").focus();
       });
+
       document.getElementById("lock").addEventListener("click", () => {
         state.unlocked = false;
         state.showNumbers = false;
-        try { sessionStorage.removeItem("seat-plan-unlock"); } catch (error) { /* ignore */ }
+
+        try {
+          sessionStorage.removeItem("seat-plan-unlock");
+        } catch (error) { /* ignore */ }
+
         render();
       });
+
       document.getElementById("open-sheet").addEventListener("click", () => {
-        document.getElementById("sheet-form").hidden = state.sheetUnlocked;
-        document.getElementById("sheet-open-note").hidden = !state.sheetUnlocked;
+        // Always require the password whenever the Class sheet is opened.
+        state.sheetUnlocked = false;
+
+        document.getElementById("sheet-modal").hidden = true;
         document.getElementById("sheet-error").hidden = true;
-        document.getElementById("sheet-modal").hidden = false;
+        document.getElementById("sheet-password").value = "";
+        document.getElementById("sheet-pass-modal").hidden = false;
+
+        render();
+        document.getElementById("sheet-password").focus();
       });
-      document.getElementById("close-sheet").addEventListener("click", () => { document.getElementById("sheet-modal").hidden = true; });
-      document.getElementById("pass-cancel").addEventListener("click", () => { document.getElementById("pass-modal").hidden = true; });
-      document.getElementById("edit-cancel").addEventListener("click", () => { document.getElementById("edit-modal").hidden = true; });
+
+      document.getElementById("close-sheet").addEventListener("click", () => {
+        // Closing the sheet immediately revokes access.
+        // The next opening asks for the password again.
+        document.getElementById("sheet-modal").hidden = true;
+        state.sheetUnlocked = false;
+        render();
+      });
+
+      document.getElementById("sheet-pass-cancel").addEventListener("click", () => {
+        document.getElementById("sheet-pass-modal").hidden = true;
+        state.sheetUnlocked = false;
+        render();
+      });
+
+      document.getElementById("pass-cancel").addEventListener("click", () => {
+        document.getElementById("pass-modal").hidden = true;
+      });
+
+      document.getElementById("edit-cancel").addEventListener("click", () => {
+        document.getElementById("edit-modal").hidden = true;
+      });
+
       document.getElementById("pass-form").addEventListener("submit", async (event) => {
         event.preventDefault();
-        const hash = await sha256Hex(document.getElementById("class-password").value);
-        if (hash !== PASS_HASH) { document.getElementById("pass-error").hidden = false; return; }
+
+        const hash = await sha256Hex(
+          document.getElementById("class-password").value
+        );
+
+        if (hash !== PASS_HASH) {
+          document.getElementById("pass-error").hidden = false;
+          return;
+        }
+
         state.unlocked = true;
         state.showNumbers = true;
-        try { sessionStorage.setItem("seat-plan-unlock", "1"); } catch (error) { /* ignore */ }
+
+        try {
+          sessionStorage.setItem("seat-plan-unlock", "1");
+        } catch (error) { /* ignore */ }
+
         document.getElementById("pass-modal").hidden = true;
         render();
       });
-      document.getElementById("sheet-form").addEventListener("submit", async (event) => {
-      event.preventDefault();
 
-      const password = document.getElementById("sheet-password").value;
-      const hash = await sha256Hex(password);
+      // Class sheet authentication: only the 10resilient* password is accepted.
+      // The rankings window is not displayed until this check succeeds.
+      document.getElementById("sheet-pass-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
 
-      if (hash !== PASS_HASH) {
-        document.getElementById("sheet-error").hidden = false;
-        return;
-      }
+        const password = document.getElementById("sheet-password").value;
+        const hash = await sha256Hex(password);
 
-      state.sheetUnlocked = true;
+        if (hash !== SHEET_PASS_HASH) {
+          document.getElementById("sheet-error").hidden = false;
+          document.getElementById("sheet-password").value = "";
+          document.getElementById("sheet-password").focus();
+          return;
+        }
 
-       try {
-         sessionStorage.setItem("seat-plan-sheet-lrn", "1");
-      } catch (error) {
-        /* ignore */
-      }
+        // Grant access only for this single opening of the Class sheet.
+        state.sheetUnlocked = true;
 
-      document.getElementById("sheet-form").hidden = true;
-      document.getElementById("sheet-open-note").hidden = false;
-      document.getElementById("sheet-error").hidden = true;
-    
-      render();
-    });
+        document.getElementById("sheet-pass-modal").hidden = true;
+        document.getElementById("sheet-modal").hidden = false;
+        document.getElementById("sheet-error").hidden = true;
+
+        render();
       });
+
       document.getElementById("edit-form").addEventListener("submit", async (event) => {
         event.preventDefault();
+
         const student = state.editing;
         if (!student || !student.canEdit) return;
+
         const button = document.getElementById("edit-save");
+
         if (state.editStep === 1) {
           const pin = document.getElementById("edit-pin").value.trim();
           const match = DIRECTORY.find((entry) => entry.id === student.id);
+
           if (!match || match.pin !== pin) {
             document.getElementById("edit-pin").value = "";
             document.getElementById("edit-error").hidden = false;
-            document.getElementById("edit-error").textContent = "That LRN does not match. Try again.";
+            document.getElementById("edit-error").textContent =
+              "That LRN does not match. Try again.";
             return;
           }
+
           state.pin = pin;
           state.editStep = 2;
+
           document.getElementById("edit-step1").hidden = true;
           document.getElementById("edit-step2").hidden = false;
-          document.getElementById("edit-current").textContent = "Current recitations: " + student.points;
+          document.getElementById("edit-current").textContent =
+            "Current recitations: " + student.points;
           document.getElementById("edit-points").value = String(student.points);
           document.getElementById("edit-error").hidden = true;
+
           button.textContent = "Save";
           document.getElementById("edit-points").focus();
           return;
         }
+
         button.disabled = true;
         button.textContent = "Saving";
+
         try {
-          const result = await saveCount(student, state.pin, document.getElementById("edit-points").value);
+          const result = await saveCount(
+            student,
+            state.pin,
+            document.getElementById("edit-points").value
+          );
+
           if (!result.ok) {
             state.editStep = 1;
             state.pin = "";
+
             document.getElementById("edit-step1").hidden = false;
             document.getElementById("edit-step2").hidden = true;
             document.getElementById("edit-pin").value = "";
             document.getElementById("edit-error").hidden = false;
             document.getElementById("edit-error").textContent = result.message;
+
             button.textContent = "Continue";
             return;
           }
+
           document.getElementById("edit-modal").hidden = true;
           state.fetchedAt = new Date().toISOString();
           state.notice = "";
           render();
         } catch (error) {
           document.getElementById("edit-error").hidden = false;
-          document.getElementById("edit-error").textContent = "Couldn’t save for the class. Try again.";
+          document.getElementById("edit-error").textContent =
+            "Couldn’t save for the class. Try again.";
         } finally {
           button.disabled = false;
-          if (state.editStep === 2) button.textContent = "Save";
+
+          if (state.editStep === 2) {
+            button.textContent = "Save";
+          }
         }
       });
 
       void refreshSheet();
-      setInterval(() => { if (document.visibilityState === "visible") void refreshShared(); }, 12000);
-      document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") void refreshSheet(); });
+
+      setInterval(() => {
+        if (document.visibilityState === "visible") {
+          void refreshShared();
+        }
+      }, 12000);
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          void refreshSheet();
+        }
+      });
     </script>
   </body>
 </html>
